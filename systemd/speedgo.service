@@ -1,0 +1,28 @@
+[Unit]
+Description=GO-Speedtest Server
+Documentation=https://github.com/iamfafakkk/GO-Speedtest
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/speedtest
+ExecStart=/opt/speedtest/speedtest
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=PORT=8645
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/speedtest
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
