@@ -250,6 +250,21 @@ curl -N "http://localhost:8645/speedtest/upload/stream?duration=10"
 2. **Network Required**: Server harus terkoneksi ke internet untuk bisa melakukan speedtest
 3. **Server Selection**: Secara default akan memilih server terdekat, gunakan `server_id` untuk memilih server tertentu
 
+## Reverse Proxy Configuration (Nginx/Cloudflare)
+
+Jika menjalankan server di belakang Nginx atau Cloudflare, pastikan buffering dimatikan untuk path `/speedtest/*/stream`.
+
+Aplikasi ini sudah menambahkan header `X-Accel-Buffering: no` secara otomatis. Namun pastikan konfigurasi Nginx Anda mendukungnya:
+
+```nginx
+location /speedtest/ {
+    proxy_pass http://localhost:8645;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_buffering off; # Optional, header X-Accel-Buffering: no sudah handle ini
+}
+```
+
 ## License
 
 MIT

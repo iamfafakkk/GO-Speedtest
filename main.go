@@ -82,7 +82,7 @@ type StreamEvent struct {
 	Sponsor   string  `json:"sponsor,omitempty"`
 	Location  string  `json:"location,omitempty"`
 	Latency   float64 `json:"latency_ms,omitempty"`
-	Message   string  `json:\"message,omitempty\"`
+	Message   string  `json:"message,omitempty"`
 }
 
 // ErrorResponse for API errors
@@ -416,6 +416,8 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Disable buffering for Nginx/Cloudflare
+	w.Header().Set("X-Accel-Buffering", "no")
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -569,6 +571,8 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// Disable buffering for Nginx/Cloudflare
+	w.Header().Set("X-Accel-Buffering", "no")
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
