@@ -29,7 +29,8 @@ type PingResponse struct {
 	Status     string  `json:"status"`
 	Latency    float64 `json:"latency_ms"`
 	ServerID   string  `json:"server_id"`
-	ServerName string  `json:"server_name"`
+	Sponsor    string  `json:"sponsor"`  // ISP name (e.g., "Mamura")
+	Location   string  `json:"location"` // City name (e.g., "Solo")
 	ServerHost string  `json:"server_host"`
 	Country    string  `json:"country"`
 	Distance   float64 `json:"distance_km"`
@@ -40,7 +41,8 @@ type PingResponse struct {
 type DownloadResponse struct {
 	SpeedMbps  float64 `json:"speed_mbps"`
 	ServerID   string  `json:"server_id"`
-	ServerName string  `json:"server_name"`
+	Sponsor    string  `json:"sponsor"`
+	Location   string  `json:"location"`
 	ServerHost string  `json:"server_host"`
 	Country    string  `json:"country"`
 	Latency    float64 `json:"latency_ms"`
@@ -52,7 +54,8 @@ type DownloadResponse struct {
 type UploadResponse struct {
 	SpeedMbps  float64 `json:"speed_mbps"`
 	ServerID   string  `json:"server_id"`
-	ServerName string  `json:"server_name"`
+	Sponsor    string  `json:"sponsor"`
+	Location   string  `json:"location"`
 	ServerHost string  `json:"server_host"`
 	Country    string  `json:"country"`
 	Latency    float64 `json:"latency_ms"`
@@ -63,7 +66,8 @@ type UploadResponse struct {
 // ServerInfo represents minimal server info for response
 type ServerInfo struct {
 	ID       string  `json:"id"`
-	Name     string  `json:"name"`
+	Sponsor  string  `json:"sponsor"`
+	Location string  `json:"location"`
 	Host     string  `json:"host"`
 	Country  string  `json:"country"`
 	Distance float64 `json:"distance_km"`
@@ -71,13 +75,14 @@ type ServerInfo struct {
 
 // StreamEvent represents SSE event for realtime progress
 type StreamEvent struct {
-	Type       string  `json:"type"` // "progress", "complete", "error"
-	SpeedMbps  float64 `json:"speed_mbps"`
-	Elapsed    float64 `json:"elapsed_sec"`
-	ServerID   string  `json:"server_id,omitempty"`
-	ServerName string  `json:"server_name,omitempty"`
-	Latency    float64 `json:"latency_ms,omitempty"`
-	Message    string  `json:"message,omitempty"`
+	Type      string  `json:"type"` // "progress", "complete", "error"
+	SpeedMbps float64 `json:"speed_mbps"`
+	Elapsed   float64 `json:"elapsed_sec"`
+	ServerID  string  `json:"server_id,omitempty"`
+	Sponsor   string  `json:"sponsor,omitempty"`
+	Location  string  `json:"location,omitempty"`
+	Latency   float64 `json:"latency_ms,omitempty"`
+	Message   string  `json:\"message,omitempty\"`
 }
 
 // ErrorResponse for API errors
@@ -199,7 +204,7 @@ func speedtestPingHandler(w http.ResponseWriter, r *http.Request) {
 		Status:     "success",
 		Latency:    float64(server.Latency.Milliseconds()),
 		ServerID:   server.ID,
-		ServerName: server.Name,
+		Sponsor: server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Distance:   server.Distance,
@@ -258,7 +263,7 @@ func speedtestDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	response := DownloadResponse{
 		SpeedMbps:  speedMbps,
 		ServerID:   server.ID,
-		ServerName: server.Name,
+		Sponsor: server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Latency:    float64(server.Latency.Milliseconds()),
@@ -322,7 +327,7 @@ func speedtestUploadHandler(w http.ResponseWriter, r *http.Request) {
 	response := UploadResponse{
 		SpeedMbps:  speedMbps,
 		ServerID:   server.ID,
-		ServerName: server.Name,
+		Sponsor: server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Latency:    float64(server.Latency.Milliseconds()),
@@ -370,7 +375,7 @@ func speedtestServersHandler(w http.ResponseWriter, r *http.Request) {
 		s := servers[i]
 		serverList = append(serverList, ServerInfo{
 			ID:       s.ID,
-			Name:     s.Name,
+			Sponsor: s.Sponsor, Location: s.Name,
 			Host:     s.Host,
 			Country:  s.Country,
 			Distance: s.Distance,
@@ -452,7 +457,7 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	sendSSE(w, flusher, StreamEvent{
 		Type:       "start",
 		ServerID:   server.ID,
-		ServerName: server.Name,
+		Sponsor: server.Sponsor, Location: server.Name,
 		Latency:    latency,
 	})
 
@@ -499,7 +504,7 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 				SpeedMbps:  finalSpeed,
 				Elapsed:    elapsed,
 				ServerID:   server.ID,
-				ServerName: server.Name,
+				Sponsor: server.Sponsor, Location: server.Name,
 				Latency:    latency,
 			})
 			server.Context.Reset()
@@ -514,7 +519,7 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 					SpeedMbps:  speed,
 					Elapsed:    elapsed,
 					ServerID:   server.ID,
-					ServerName: server.Name,
+					Sponsor: server.Sponsor, Location: server.Name,
 					Latency:    latency,
 				})
 				server.Context.Reset()
@@ -536,7 +541,7 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 					SpeedMbps:  lastSpeed,
 					Elapsed:    elapsed,
 					ServerID:   server.ID,
-					ServerName: server.Name,
+					Sponsor: server.Sponsor, Location: server.Name,
 					Latency:    latency,
 				})
 				server.Context.Reset()
@@ -605,7 +610,7 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	sendSSE(w, flusher, StreamEvent{
 		Type:       "start",
 		ServerID:   server.ID,
-		ServerName: server.Name,
+		Sponsor: server.Sponsor, Location: server.Name,
 		Latency:    latency,
 	})
 
@@ -652,7 +657,7 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 				SpeedMbps:  finalSpeed,
 				Elapsed:    elapsed,
 				ServerID:   server.ID,
-				ServerName: server.Name,
+				Sponsor: server.Sponsor, Location: server.Name,
 				Latency:    latency,
 			})
 			server.Context.Reset()
@@ -667,7 +672,7 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 					SpeedMbps:  speed,
 					Elapsed:    elapsed,
 					ServerID:   server.ID,
-					ServerName: server.Name,
+					Sponsor: server.Sponsor, Location: server.Name,
 					Latency:    latency,
 				})
 				server.Context.Reset()
@@ -689,7 +694,7 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 					SpeedMbps:  lastSpeed,
 					Elapsed:    elapsed,
 					ServerID:   server.ID,
-					ServerName: server.Name,
+					Sponsor: server.Sponsor, Location: server.Name,
 					Latency:    latency,
 				})
 				server.Context.Reset()
