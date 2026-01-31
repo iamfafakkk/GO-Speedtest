@@ -1,14 +1,14 @@
 # GO-Speedtest
 
-REST API server untuk internet speed test dengan **realtime streaming** seperti Ookla Speedtest. Pure Go, zero dependencies.
+REST API server untuk internet speed test menggunakan [speedtest-go](https://github.com/showwin/speedtest-go) library. Test langsung ke server Ookla Speedtest.
 
 ## Features
 
-- 🏓 **Ping Test** - Mengukur latency ke server
-- ⬇️ **Download Test** - Chunked streaming untuk realtime progress
-- ⬆️ **Upload Test** - Speed calculation dari upload stream
-- 🌐 **CORS Support** - Browser-compatible
-- ⚡ **Zero Dependencies** - Pure Go standard library
+- 🏓 **Ping Test** - Latency ke Ookla server terdekat
+- ⬇️ **Download Test** - Real download speed via Ookla server
+- ⬆️ **Upload Test** - Real upload speed via Ookla server
+- 🌐 **Server List** - Daftar server Ookla terdekat
+- 🎯 **Specific Server** - Test ke server tertentu via `server_id`
 
 ## Quick Start
 
@@ -25,90 +25,95 @@ Server berjalan di `http://localhost:8645` (atau custom via env `PORT`)
 
 ## API Reference
 
-### GET /ping
-Cek latency ke server.
-
-**Response:**
-```json
-{
-  "status": "pong",
-  "timestamp": 1706688000000,
-  "server_id": "hostname"
-}
-```
-
-**Cara hitung latency:**
-```javascript
-const start = Date.now();
-const res = await fetch('http://localhost:8645/ping');
-const latency = Date.now() - start;
-console.log(`Latency: ${latency}ms`);
-```
-
----
-
-### GET /download
-Download test dengan chunked streaming.
+### GET /speedtest/ping
+Test latency ke server Ookla terdekat.
 
 **Query Parameters:**
 | Param | Type | Default | Description |
 |-------|------|---------|-------------|
-| size | int | 25 | Ukuran download dalam MB (max: 100) |
+| server_id | string | - | Optional, ID server Ookla tertentu |
 
-**Response:** Binary stream dengan `Content-Length` header
-
-**Cara hitung speed (realtime):**
-```javascript
-const response = await fetch('http://localhost:8645/download?size=25');
-const reader = response.body.getReader();
-const contentLength = +response.headers.get('Content-Length');
-
-let receivedBytes = 0;
-const startTime = Date.now();
-
-while (true) {
-  const { done, value } = await reader.read();
-  if (done) break;
-  
-  receivedBytes += value.length;
-  const elapsed = (Date.now() - startTime) / 1000;
-  const speedMbps = (receivedBytes * 8) / (elapsed * 1_000_000);
-  const progress = (receivedBytes / contentLength) * 100;
-  
-  console.log(`Progress: ${progress.toFixed(1)}% | Speed: ${speedMbps.toFixed(2)} Mbps`);
+**Response:**
+```json
+{
+  "status": "success",
+  "latency_ms": 15.5,
+  "server_id": "12345",
+  "server_name": "MyISP - Jakarta",
+  "server_host": "speedtest.myisp.co.id:8080",
+  "country": "Indonesia",
+  "distance_km": 5.2,
+  "timestamp": 1706688000000
 }
 ```
 
 ---
 
-### POST /upload
-Upload test - kirim data, server hitung speed.
+### GET /speedtest/download
+Test download speed ke server Ookla terdekat.
 
-**Request:** Binary body (application/octet-stream)
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| server_id | string | - | Optional, ID server Ookla tertentu |
 
 **Response:**
 ```json
 {
-  "bytes": 10485760,
-  "duration_ms": 1500,
-  "speed_mbps": 55.92
+  "speed_mbps": 95.5,
+  "server_id": "12345",
+  "server_name": "MyISP - Jakarta",
+  "server_host": "speedtest.myisp.co.id:8080",
+  "country": "Indonesia",
+  "latency_ms": 15.5,
+  "duration_ms": 8500,
+  "timestamp": 1706688000000
 }
 ```
 
-**Cara test upload (realtime):**
-```javascript
-const data = new Uint8Array(10 * 1024 * 1024); // 10MB
-crypto.getRandomValues(data);
+---
 
-const startTime = Date.now();
-const response = await fetch('http://localhost:8645/upload', {
-  method: 'POST',
-  body: data,
-  headers: { 'Content-Type': 'application/octet-stream' }
-});
+### GET /speedtest/upload
+Test upload speed ke server Ookla terdekat.
 
-const result = await response.json();
-console.log(`Uploaded: ${result.bytes} bytes | Speed: ${result.speed_mbps.toFixed(2)} Mbps`);
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| server_id | string | - | Optional, ID server Ookla tertentu |
+
+**Response:**
+```json
+{
+  "speed_mbps": 45.2,
+  "server_id": "12345",
+  "server_name": "MyISP - Jakarta",
+  "server_host": "speedtest.myisp.co.id:8080",
+  "country": "Indonesia",
+  "latency_ms": 15.5,
+  "duration_ms": 8500,
+  "timestamp": 1706688000000
+}
+```
+
+---
+
+### GET /speedtest/servers
+Daftar 10 server Ookla terdekat.
+
+**Response:**
+```json
+{
+  "count": 10,
+  "servers": [
+    {
+      "id": "12345",
+      "name": "MyISP - Jakarta",
+      "host": "speedtest.myisp.co.id:8080",
+      "country": "Indonesia",
+      "distance_km": 5.2
+    }
+  ]
+}
 ```
 
 ---
@@ -120,25 +125,34 @@ Health check endpoint.
 ```json
 {
   "service": "GO-Speedtest",
-  "version": "1.0.0",
-  "status": "running"
+  "version": "2.0.0",
+  "status": "running",
+  "library": "speedtest-go v1.7.10"
 }
 ```
 
 ## Testing dengan cURL
 
 ```bash
-# 1. Ping test
-curl -w "\nLatency: %{time_total}s\n" http://localhost:8645/ping
+# 1. Health check
+curl http://localhost:8645/
 
-# 2. Download test (10MB)
-curl -o /dev/null -w "Speed: %{speed_download} B/s\nTime: %{time_total}s\n" \
-  "http://localhost:8645/download?size=10"
+# 2. List servers
+curl http://localhost:8645/speedtest/servers
 
-# 3. Upload test (10MB random data)
-dd if=/dev/urandom bs=1M count=10 2>/dev/null | \
-  curl -X POST -H "Content-Type: application/octet-stream" \
-  --data-binary @- http://localhost:8645/upload
+# 3. Ping test
+curl http://localhost:8645/speedtest/ping
+
+# 4. Download test
+curl http://localhost:8645/speedtest/download
+
+# 5. Upload test
+curl http://localhost:8645/speedtest/upload
+
+# 6. Test dengan server tertentu
+curl "http://localhost:8645/speedtest/ping?server_id=12345"
+curl "http://localhost:8645/speedtest/download?server_id=12345"
+curl "http://localhost:8645/speedtest/upload?server_id=12345"
 ```
 
 ## Environment Variables
@@ -147,50 +161,94 @@ dd if=/dev/urandom bs=1M count=10 2>/dev/null | \
 |----------|---------|-------------|
 | PORT | 8645 | Port server |
 
-## Realtime Client Example (HTML)
+## Dependencies
 
-```html
-<!DOCTYPE html>
-<html>
-<head><title>Speedtest</title></head>
-<body>
-  <button onclick="runTest()">Start Test</button>
-  <div id="result"></div>
-  <script>
-    async function runTest() {
-      const result = document.getElementById('result');
-      
-      // Ping
-      const pingStart = Date.now();
-      await fetch('http://localhost:8645/ping');
-      result.innerHTML = `Ping: ${Date.now() - pingStart}ms<br>`;
-      
-      // Download
-      const dlStart = Date.now();
-      const res = await fetch('http://localhost:8645/download?size=10');
-      const reader = res.body.getReader();
-      const total = +res.headers.get('Content-Length');
-      let received = 0;
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        received += value.length;
-        const speed = (received * 8) / ((Date.now() - dlStart) / 1000) / 1e6;
-        result.innerHTML += `Download: ${speed.toFixed(2)} Mbps (${((received/total)*100).toFixed(0)}%)<br>`;
-      }
-    }
-  </script>
-</body>
-</html>
+- [speedtest-go](https://github.com/showwin/speedtest-go) v1.7.10 - Library untuk Ookla Speedtest
+
+---
+
+## Realtime SSE Streaming
+
+Untuk mendapatkan progress realtime selama test, gunakan SSE (Server-Sent Events) endpoints.
+
+### GET /speedtest/download/stream
+SSE streaming untuk download test dengan progress realtime.
+
+**Query Parameters:**
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| server_id | string | - | Optional, ID server Ookla tertentu |
+| duration | int | 10 | Test duration in seconds (max: 30) |
+
+**SSE Events:**
+```javascript
+// Event types: "start", "progress", "complete", "error"
+
+// start event
+{"type":"start","server_id":"12345","server_name":"MyISP - Jakarta","latency_ms":15.5}
+
+// progress event (setiap 200ms)
+{"type":"progress","speed_mbps":85.5,"elapsed_sec":2.4}
+
+// complete event
+{"type":"complete","speed_mbps":95.5,"elapsed_sec":10.2,"server_id":"12345","server_name":"MyISP - Jakarta","latency_ms":15.5}
+
+// error event
+{"type":"error","message":"failed to connect to server"}
 ```
 
-## Architecture Notes
+### GET /speedtest/upload/stream
+SSE streaming untuk upload test dengan progress realtime. Format sama dengan download.
 
-- **Chunked Transfer**: Server flush setiap 64KB chunk untuk realtime progress
-- **Random Data**: Download menggunakan crypto/rand untuk data realistis
-- **Memory Efficient**: Upload menggunakan streaming read, tidak buffer seluruh body
-- **CORS Enabled**: Support browser-based speedtest clients
+### JavaScript Usage Example
+
+```javascript
+// Realtime download test dengan progress
+const eventSource = new EventSource('http://localhost:8645/speedtest/download/stream?duration=15');
+
+eventSource.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  
+  switch(data.type) {
+    case 'start':
+      console.log(`Testing server: ${data.server_name}, Latency: ${data.latency_ms}ms`);
+      break;
+    case 'progress':
+      console.log(`Speed: ${data.speed_mbps.toFixed(2)} Mbps (${data.elapsed_sec.toFixed(1)}s)`);
+      break;
+    case 'complete':
+      console.log(`Final: ${data.speed_mbps.toFixed(2)} Mbps`);
+      eventSource.close();
+      break;
+    case 'error':
+      console.error(data.message);
+      eventSource.close();
+      break;
+  }
+};
+
+eventSource.onerror = () => {
+  console.error('SSE connection failed');
+  eventSource.close();
+};
+```
+
+### cURL Test (SSE)
+```bash
+# Download stream (realtime, 15 seconds)
+curl -N "http://localhost:8645/speedtest/download/stream?duration=15"
+
+# Upload stream (realtime, 10 seconds)
+curl -N "http://localhost:8645/speedtest/upload/stream?duration=10"
+```
+
+---
+
+## Notes
+
+1. **Execution Time**: Download dan upload test membutuhkan waktu 5-15 detik karena menjalankan test actual ke server Ookla
+2. **Network Required**: Server harus terkoneksi ke internet untuk bisa melakukan speedtest
+3. **Server Selection**: Secara default akan memilih server terdekat, gunakan `server_id` untuk memilih server tertentu
 
 ## License
 
