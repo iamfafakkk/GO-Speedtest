@@ -427,9 +427,8 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send padding to bypass proxy buffering (16KB for Cloudflare/Nginx reliability)
-	// Cloudflare sometimes buffers significantly more than 2KB
-	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 16384))
+	// Send padding to bypass proxy buffering (2KB)
+	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 2048))
 	flusher.Flush()
 
 	// Parse duration parameter (in seconds)
@@ -588,9 +587,8 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send padding to bypass proxy buffering (16KB for Cloudflare/Nginx reliability)
-	// Cloudflare sometimes buffers significantly more than 2KB
-	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 16384))
+	// Send padding to bypass proxy buffering (2KB)
+	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 2048))
 	flusher.Flush()
 
 	// Parse duration parameter (in seconds)
