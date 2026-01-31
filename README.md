@@ -257,11 +257,37 @@ Jika menjalankan server di belakang Nginx atau Cloudflare, pastikan buffering di
 Aplikasi ini sudah menambahkan header `X-Accel-Buffering: no` secara otomatis. Namun pastikan konfigurasi Nginx Anda mendukungnya:
 
 ```nginx
-location /speedtest/ {
-    proxy_pass http://localhost:8645;
+location @reverse_proxy {
+    proxy_pass {{reverse_proxy_url}};
     proxy_http_version 1.1;
+
+    # Headers
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Server $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Host $host;
+
+    # Connection Setup for SSE (Keep-Alive)
+    proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "";
-    proxy_buffering off; # Optional, header X-Accel-Buffering: no sudah handle ini
+
+    # === FIX REALTIME SPEED (BUFFERING OFF) ===
+    # Matikan buffering agar output realtime tidak ditahan di memory Nginx
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_max_temp_file_size 0;
+    
+    # Timeout Settings
+    proxy_connect_timeout 900;
+    proxy_send_timeout 900;
+    proxy_read_timeout 900;
+
+    # SSL (If needed)
+    proxy_ssl_server_name on;
+    proxy_ssl_name $host;
+    proxy_pass_request_headers on;
 }
 ```
 
