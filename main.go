@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/showwin/speedtest-go/speedtest"
@@ -418,12 +419,17 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	// Disable buffering for Nginx/Cloudflare
 	w.Header().Set("X-Accel-Buffering", "no")
+	w.Header().Set("Content-Encoding", "identity") // Disable compression
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "SSE not supported", http.StatusInternalServerError)
 		return
 	}
+
+	// Send padding to bypass proxy buffering (2KB)
+	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 2048))
+	flusher.Flush()
 
 	// Parse duration parameter (in seconds)
 	durationStr := r.URL.Query().Get("duration")
@@ -573,12 +579,17 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	// Disable buffering for Nginx/Cloudflare
 	w.Header().Set("X-Accel-Buffering", "no")
+	w.Header().Set("Content-Encoding", "identity") // Disable compression
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "SSE not supported", http.StatusInternalServerError)
 		return
 	}
+
+	// Send padding to bypass proxy buffering (2KB)
+	fmt.Fprintf(w, ": %s\n\n", strings.Repeat(" ", 2048))
+	flusher.Flush()
 
 	// Parse duration parameter (in seconds)
 	durationStr := r.URL.Query().Get("duration")
