@@ -39,7 +39,7 @@ echo ""
 echo "[4/6] Installing to $INSTALL_DIR..."
 mkdir -p $INSTALL_DIR
 cp ./build/$APP_NAME $INSTALL_DIR/
-chown www-data:www-data $INSTALL_DIR/$APP_NAME
+chown root:root $INSTALL_DIR/$APP_NAME
 chmod +x $INSTALL_DIR/$APP_NAME
 
 # 5. Update systemd service
