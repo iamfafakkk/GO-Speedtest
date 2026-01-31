@@ -1,6 +1,6 @@
 # GO-Speedtest
 
-REST API server untuk internet speed test menggunakan [speedtest-go](https://github.com/showwin/speedtest-go) library. Test langsung ke server Ookla Speedtest.
+REST API server untuk internet speed test menggunakan [speedtest-go](https://github.com/iamfafakkk/speedtest-go) library. Test langsung ke server Ookla Speedtest.
 
 ## Features
 
