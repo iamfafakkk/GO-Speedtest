@@ -201,10 +201,10 @@ func speedtestPingHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := PingResponse{
-		Status:     "success",
-		Latency:    float64(server.Latency.Milliseconds()),
-		ServerID:   server.ID,
-		Sponsor: server.Sponsor, Location: server.Name,
+		Status:   "success",
+		Latency:  float64(server.Latency.Milliseconds()),
+		ServerID: server.ID,
+		Sponsor:  server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Distance:   server.Distance,
@@ -261,9 +261,9 @@ func speedtestDownloadHandler(w http.ResponseWriter, r *http.Request) {
 	speedMbps := float64(server.DLSpeed) / 1_000_000 * 8
 
 	response := DownloadResponse{
-		SpeedMbps:  speedMbps,
-		ServerID:   server.ID,
-		Sponsor: server.Sponsor, Location: server.Name,
+		SpeedMbps: speedMbps,
+		ServerID:  server.ID,
+		Sponsor:   server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Latency:    float64(server.Latency.Milliseconds()),
@@ -325,9 +325,9 @@ func speedtestUploadHandler(w http.ResponseWriter, r *http.Request) {
 	speedMbps := float64(server.ULSpeed) / 1_000_000 * 8
 
 	response := UploadResponse{
-		SpeedMbps:  speedMbps,
-		ServerID:   server.ID,
-		Sponsor: server.Sponsor, Location: server.Name,
+		SpeedMbps: speedMbps,
+		ServerID:  server.ID,
+		Sponsor:   server.Sponsor, Location: server.Name,
 		ServerHost: server.Host,
 		Country:    server.Country,
 		Latency:    float64(server.Latency.Milliseconds()),
@@ -374,7 +374,7 @@ func speedtestServersHandler(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < limit; i++ {
 		s := servers[i]
 		serverList = append(serverList, ServerInfo{
-			ID:       s.ID,
+			ID:      s.ID,
 			Sponsor: s.Sponsor, Location: s.Name,
 			Host:     s.Host,
 			Country:  s.Country,
@@ -455,10 +455,10 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial event
 	sendSSE(w, flusher, StreamEvent{
-		Type:       "start",
-		ServerID:   server.ID,
-		Sponsor: server.Sponsor, Location: server.Name,
-		Latency:    latency,
+		Type:     "start",
+		ServerID: server.ID,
+		Sponsor:  server.Sponsor, Location: server.Name,
+		Latency: latency,
 	})
 
 	// Channel for realtime speed updates from callback
@@ -500,12 +500,12 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			elapsed := time.Since(startTime).Seconds()
 			sendSSE(w, flusher, StreamEvent{
-				Type:       "complete",
-				SpeedMbps:  finalSpeed,
-				Elapsed:    elapsed,
-				ServerID:   server.ID,
-				Sponsor: server.Sponsor, Location: server.Name,
-				Latency:    latency,
+				Type:      "complete",
+				SpeedMbps: finalSpeed,
+				Elapsed:   elapsed,
+				ServerID:  server.ID,
+				Sponsor:   server.Sponsor, Location: server.Name,
+				Latency: latency,
 			})
 			server.Context.Reset()
 			return
@@ -515,12 +515,12 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 				// Force stop after duration
 				elapsed := time.Since(startTime).Seconds()
 				sendSSE(w, flusher, StreamEvent{
-					Type:       "complete",
-					SpeedMbps:  speed,
-					Elapsed:    elapsed,
-					ServerID:   server.ID,
-					Sponsor: server.Sponsor, Location: server.Name,
-					Latency:    latency,
+					Type:      "complete",
+					SpeedMbps: speed,
+					Elapsed:   elapsed,
+					ServerID:  server.ID,
+					Sponsor:   server.Sponsor, Location: server.Name,
+					Latency: latency,
 				})
 				server.Context.Reset()
 				return
@@ -537,12 +537,12 @@ func speedtestDownloadStreamHandler(w http.ResponseWriter, r *http.Request) {
 			if time.Now().After(testDeadline) {
 				elapsed := time.Since(startTime).Seconds()
 				sendSSE(w, flusher, StreamEvent{
-					Type:       "complete",
-					SpeedMbps:  lastSpeed,
-					Elapsed:    elapsed,
-					ServerID:   server.ID,
-					Sponsor: server.Sponsor, Location: server.Name,
-					Latency:    latency,
+					Type:      "complete",
+					SpeedMbps: lastSpeed,
+					Elapsed:   elapsed,
+					ServerID:  server.ID,
+					Sponsor:   server.Sponsor, Location: server.Name,
+					Latency: latency,
 				})
 				server.Context.Reset()
 				return
@@ -608,10 +608,10 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial event
 	sendSSE(w, flusher, StreamEvent{
-		Type:       "start",
-		ServerID:   server.ID,
-		Sponsor: server.Sponsor, Location: server.Name,
-		Latency:    latency,
+		Type:     "start",
+		ServerID: server.ID,
+		Sponsor:  server.Sponsor, Location: server.Name,
+		Latency: latency,
 	})
 
 	// Channel for realtime speed updates from callback
@@ -653,12 +653,12 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			elapsed := time.Since(startTime).Seconds()
 			sendSSE(w, flusher, StreamEvent{
-				Type:       "complete",
-				SpeedMbps:  finalSpeed,
-				Elapsed:    elapsed,
-				ServerID:   server.ID,
-				Sponsor: server.Sponsor, Location: server.Name,
-				Latency:    latency,
+				Type:      "complete",
+				SpeedMbps: finalSpeed,
+				Elapsed:   elapsed,
+				ServerID:  server.ID,
+				Sponsor:   server.Sponsor, Location: server.Name,
+				Latency: latency,
 			})
 			server.Context.Reset()
 			return
@@ -668,12 +668,12 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 				// Force stop after duration
 				elapsed := time.Since(startTime).Seconds()
 				sendSSE(w, flusher, StreamEvent{
-					Type:       "complete",
-					SpeedMbps:  speed,
-					Elapsed:    elapsed,
-					ServerID:   server.ID,
-					Sponsor: server.Sponsor, Location: server.Name,
-					Latency:    latency,
+					Type:      "complete",
+					SpeedMbps: speed,
+					Elapsed:   elapsed,
+					ServerID:  server.ID,
+					Sponsor:   server.Sponsor, Location: server.Name,
+					Latency: latency,
 				})
 				server.Context.Reset()
 				return
@@ -690,12 +690,12 @@ func speedtestUploadStreamHandler(w http.ResponseWriter, r *http.Request) {
 			if time.Now().After(testDeadline) {
 				elapsed := time.Since(startTime).Seconds()
 				sendSSE(w, flusher, StreamEvent{
-					Type:       "complete",
-					SpeedMbps:  lastSpeed,
-					Elapsed:    elapsed,
-					ServerID:   server.ID,
-					Sponsor: server.Sponsor, Location: server.Name,
-					Latency:    latency,
+					Type:      "complete",
+					SpeedMbps: lastSpeed,
+					Elapsed:   elapsed,
+					ServerID:  server.ID,
+					Sponsor:   server.Sponsor, Location: server.Name,
+					Latency: latency,
 				})
 				server.Context.Reset()
 				return
@@ -757,7 +757,7 @@ func main() {
 ║    ?server_id=12345  - Test against specific server               ║
 ║    ?duration=15      - Test duration in seconds (SSE, max 30)     ║
 ╠═══════════════════════════════════════════════════════════════════╣
-║  Server running on http://localhost:%s                           ║
+║  Server running on http://0.0.0.0:%s                           ║
 ╚═══════════════════════════════════════════════════════════════════╝
 `, port)
 
